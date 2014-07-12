@@ -37,13 +37,15 @@
                 var updatePoints = [];
                 units.forEach( function (u){                    
                     var bsClass = "col-md-" + Math.floor(12/numUnits);
-                    var $feed = $("<canvas class='unit-feed' width=320 height=420 ></canvas>");
+                    var colstyle = "style='border: 4px solid rgb(" + u.colors.join(',')+")'";
+                    var $feed = $("<canvas " + colstyle +" class='unit-feed' width=320 height=420 ></canvas>");
                     var $name = $("<div class='unit-name'></div>").text(u.name);
-                    var $positionLat = $("<br><small></small>").text(u.lat);
-                    var $positionLong = $("<br><small></small>").text(u.long);
+//                    var $positionLat = $("<br><small></small>").text(u.lat);
+//                    var $positionLong = $("<br><small></small>").text(u.long);
+console.log(colstyle);
                     var $badge = $("<div class='unit-badge "+bsClass + "'></div>");
-                    $name.append($positionLat);
-                    $name.append($positionLong);
+//                    $name.append($positionLat);
+//                    $name.append($positionLong);
                     $badge.append($name);
                     $badge.append($feed);
                     $unitsPanel.append($badge);
@@ -54,9 +56,17 @@
             };
 
             function handleAddUnit( unit ) {
+                unit.colors = [ Math.floor( Math.random() *255 ),
+                                Math.floor( Math.random() *255 ),
+                                Math.floor( Math.random() *255 )];
                 // add marker
                 unit.mapPoint = L.latLng(unit.lat,unit.long);
-                unit.marker = L.circleMarker(unit.mapPoint).addTo(map);
+                unit.marker = L.circleMarker(unit.mapPoint,
+                {
+                    color: "#"+ unit.colors[0].toString(16) + unit.colors[1].toString(16) + unit.colors[2].toString(16)
+                }).addTo(map);
+
+
 
                 units.push(unit);
                 updateUnitsDisplay();

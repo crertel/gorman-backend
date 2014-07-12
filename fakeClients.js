@@ -77,4 +77,4 @@ function startClient( name, group ) {
 startClient("chris", argv[2]);
 startClient("jim", argv[2]);
 startClient("paul", argv[2]);
-//startClient("jeff", argv[2]);
+startClient("jeff", argv[2]);
