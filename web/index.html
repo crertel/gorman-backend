@@ -18,8 +18,21 @@
         <div id="theMap">
         </div>
         <script>
-            var map = new OpenLayers.Map("theMap");
+
+            // setup map
+            var pj_epsg_900913 = new OpenLayers.Projection("EPSG:900913");
+            var pj_epsg_4326 = new OpenLayers.Projection("EPSG:4326");
+
+            var map = new OpenLayers.Map("theMap",
+                                         {
+                                             projection: this.pj_epsg_900913,
+                                             displayProjection: this.pj_epsg_4326
+                                        });
+
+
             map.addLayer( new OpenLayers.Layer.OSM());
+            drawLayer = new OpenLayers.Layer.Vector("Draw Layer");
+            map.addLayer(drawLayer);
             map.zoomToMaxExtent();
 
             var sock;
@@ -33,7 +46,11 @@
                     var bsClass = "col-md-" + Math.floor(12/numUnits);
                     var $feed = $("<canvas class='unit-feed' width=320 height=420 ></canvas>");
                     var $name = $("<div class='unit-name'></div>").text(u.name);
+                    var $positionLat = $("<br><small></small>").text(u.lat);
+                    var $positionLong = $("<br><small></small>").text(u.long);
                     var $badge = $("<div class='unit-badge "+bsClass + "'></div>");
+                    $name.append($positionLat);
+                    $name.append($positionLong);
                     $badge.append($name);
                     $badge.append($feed);
                     $unitsPanel.append($badge);
@@ -41,13 +58,40 @@
             };
 
             function handleAddUnit( unit ) {
+                // add marker
+                var point = new OpenLayers.LonLat(77.04, 38.99);
+                point.transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject());
+                unit.mapPoint = point;
+                u.marker = OpenLayers.Geometry.Polygon.createRegularPolygon(
+                            new OpenLayers.Geometry.Point(unit.mapPoint),1, 30);
+                map.setCenter(new OpenLayers.LonLat(u.long, u.lat).transform(
+                            pj_epsg_4326,
+                            pj_epsg_900913), 7);
                 units.push(unit);
+                updateUnitsDisplay();
+            }
+            function handleUpdateUnit( unit ) {
+                units.forEach( function(u) {
+                    if (u.id === unit.id) {
+                        u.long = unit.long;
+                        u.lat = unit.lat;
+                        u.bearing = unit.bearing;
+                        u.updated = unit.updated;                                    
+                    }
+                });            
+                updateUnitsDisplay();
+            }
+            function handleRemoveUnit( unit ) {
                 updateUnitsDisplay();
             }
 
             function handleEvent ( evt ){
                 switch(evt.type) {
                     case "addUnit": handleAddUnit(evt.data);
+                                    break;
+                    case "updateUnit": handleUpdateUnit(evt.data);
+                                    break;
+                    case "removeUnit": handleRemoveUnit(evt.data);
                                     break;
                     default: break;
                 }
