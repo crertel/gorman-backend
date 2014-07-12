@@ -42,7 +42,6 @@
 
             function handleAddUnit( unit ) {
                 units.push(unit);
-                console.log(units);
                 updateUnitsDisplay();
             }
 
@@ -62,11 +61,8 @@
                 sock.onmessage = function(e) {
                     try {
                         var msg = JSON.parse(e.data);
-                        console.log(msg);
                         handleEvent(msg);
-
                     } catch (e) {
-
                     }
                 };
                 sock.onclose = function() {
@@ -78,12 +74,12 @@
             
             $.ajax('/api/1.0.0/groups/test/units/',
            	{
-           		success: function(g) {
-           			
-           			console.log(g);
-           			units=g.units;
+                success: function(g) {
+                    console.log("Got seed units");
+                    units=g.units;
+                    updateUnitsDisplay();
            		}
-           	}
+           	});
         </script>
 
     </body>
