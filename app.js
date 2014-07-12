@@ -2,6 +2,7 @@
 
 var express = require("express");
 var bodyParser = require("body-parser");
+var crypto = require("crypto");
 var _ = require("lodash");
 var Promise = require("bluebird");
 var log4js = require("log4js");
@@ -9,10 +10,32 @@ var sockjs = require("sockjs")
 var log = log4js.getLogger("backend");
 
 
+var groups = [];
 
 
-function createGroup( req, res ) {
-    res.status(201).send();
+function createGroup( req, res ) {    
+    var groupCreateRequest = req.body;
+
+    log.info("Creating group...");
+    var newGroup = {
+        id: crypto.randomBytes(20).toString('hex'),
+        key: crypto.randomBytes(20).toString('hex')
+    };
+    var newGroupJSON = JSON.stringify(newGroup,null,4);
+    log.info("Created group\n%s", newGroupJSON);;
+    groups.push(newGroup);
+
+    res.set("Content-type", "application/json");
+    res.status(201).send(newGroupJSON);
+};
+
+function getGroups( req, res ) {    
+
+    log.info("Getting groups...");
+    var groupsJSON = JSON.stringify({groups:groups},null,4);
+
+    res.set("Content-type", "application/json");
+    res.status(201).send(groupsJSON);
 };
 
 function getUnitsForGroup( req, res ) {
@@ -54,6 +77,7 @@ function startWeb() {
     server.use( bodyParser.json() );
     server.get( "/api/1.0.0/groups/:groupId/units", getUnitsForGroup );
     server.get( "/api/1.0.0/groups/:groupId/markers", getMarkersForGroup );
+    server.get( "/api/1.0.0/groups", getGroups );
     server.post( "/api/1.0.0/groups", createGroup );
     server.post( "/api/1.0.0/groups/:groupId/markers", addMarkerToGroup );
     server.post( "/api/1.0.0/groups/:groupId/units", addUnitToGroup );
