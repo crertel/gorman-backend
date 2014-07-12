@@ -109,6 +109,8 @@ function updateUnit( res, req ) {
     res.status(201).send();
 };
 
+var webServer;
+
 function startWeb() {
     var port = 3000;
     log.info("Starting web server on port %s...", port);
@@ -124,7 +126,7 @@ function startWeb() {
     server.put( "/api/1.0.0/groups/:groupId/units/:unitId", updateUnit );
     server.use( "/", express.static(__dirname + "/web"));
     
-    var webserver = server.listen(port);
+    webServer = server.listen(port);
     log.info("done.");
 };
 
@@ -142,8 +144,35 @@ function tickGroups(){
 
 };
 
+var monitorSocket;
+var commanders = [];
+function startSockets() {
+    monitorSocket = sockjs.createServer();
+    monitorSocket.on('connection', function(conn) {
+        commanders.push(conn);
+        log.info("Commander joined.");
+        conn.write("Welcome!");
+        conn.on('data', function(message) {
+            log.info("Commander says %s", message);
+        });
+        conn.on('close', function () {
+            var comIndex;
+            comIndex = commanders.indexOf(conn);
+            if (comIndex != -1) {
+                commanders.splice(opIndex,1);
+            }
+            log.info("Commander left.");
+        });
+    });
+    monitorSocket.on('close', function(conn) {
+        console.log("Close connection");
+    });
+    monitorSocket.installHandlers(webServer, {prefix:'/commander'});
+};
+
 function init() {
     startWeb();
+    startSockets();
     process.on("SIGINT", shutdown);
     process.on("quit", shutdown);
 

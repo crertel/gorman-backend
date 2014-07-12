@@ -1,3 +1,20 @@
+.gorman-panel {
+    background-color: rgba(255,255,255,0.2);
+    z-index:9999;
+}
+
+#units-panel {
+    position:absolute;
+    bottom:0;
+    width:100%;
+}
+
+#theMap {
+    z-index: 0;
+}
+
+
+
 #top_header {
 	border: solid black 1px;
 }
