@@ -93,7 +93,6 @@ function addUnitToGroup( req, res ) {
             replyJSON(res, 201, {unit:unit}); return;
         }
     } else {
-        log.warn("Unable to find group %s!", groupId);
         replyJSONError(res, 404, "Unable to find group "+groupId); return;
     }
 };
@@ -128,7 +127,23 @@ function updateUnit( res, req ) {
     var groupId = req.params.groupId;
     var unitId = req.params.unitId;
     log.info("Updating unit %s for group %s...", unitId, groupId);
-    res.status(201).send();
+    var foundGroup = _.find( groups, function _findGroupById( g ) { return g.id === groupId; });
+    log.info("Adding unit to group %s...", groupId);
+    if (foundGroup) {
+        var foundUnit = _.find( g.getUnits(), function _findUnitById( u ) { return u.id === unitId; });
+        if (foundUnit) {
+            var unitLat = req.body.lat;
+            var unitLong = req.body.long;
+            var unitBearing = req.body.bearing;
+            foundUnit.update(unitLat, unitLong, unitBearing);
+            handleEvent( { type: "updateUnit", data: foundUnit } );
+            replyJSON(res, 200, {unit:unit}); return;
+        } else {
+            replyJSONError(res, 404, "Unable to find unit " +unitId); return;
+        }
+    } else {
+        replyJSONError(res, 404, "Unable to find group " + groupId); return;
+    }
 };
 
 var webServer;

@@ -9,7 +9,7 @@ function Unit (id, name, token, lat, long, bearing) {
     this.updated = this.joined;
 };
 
-Unit.prototype.update = function( token, lat, long, bearing ) {
+Unit.prototype.update = function( lat, long, bearing ) {
     this.updated = Date.now();
     this.bearing = bearing || 0.0;
     this.lat = lat || 0.0;
