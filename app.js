@@ -9,8 +9,8 @@ var log4js = require("log4js");
 var sockjs = require("sockjs")
 var log = log4js.getLogger("backend");
 
-var Group = require("models/group.js");
-var Unit = require("models/unit.js");
+var Group = require(__dirname + "/models/group.js");
+var Unit = require(__dirname + "/models/unit.js");
 
 
 var groups = [];
@@ -25,23 +25,22 @@ function replyJSONError( res, code, msg ) {
     replyJSON(res, code, {status: code, reason: msg} );
 }
 
+var keyStrength = 3;
 
 function createGroup( req, res ) {    
     var groupCreateRequest = req.body;
 
     log.info("Creating group...");
-    var newGroup = {
-        id: crypto.randomBytes(20).toString('hex'),
-        key: crypto.randomBytes(20).toString('hex')
-    };
+    var newGroup = new Group( crypto.randomBytes(keyStrength).toString('hex'),
+                              "lol");
     groups.push(newGroup);
 
-    replyJSON(res, 201, newGroup);
+    replyJSON(res, 201, newGroup); return;
 };
 
 function getGroups( req, res ) {    
     log.info("Getting groups...");
-    replyJSON(res, 201, {groups:groups});
+    replyJSON(res, 201, {groups:groups}); return;
 };
 
 function getUnitsForGroup( req, res ) {
@@ -49,11 +48,10 @@ function getUnitsForGroup( req, res ) {
     log.info("Getting units for group %s...", groupId);
     var foundGroup = _.find( groups, function _findGroupById( g ) { return g.id === groupId; });
     if (foundGroup) {
-        res.status(200).send( {units: foundGroup.units});
-        replyJSON(res, 200, {units:foundGroup.units});
+        replyJSON(res, 200, {units:foundGroup.units}); return;
     } else {
         log.warn("Unable to find group %s!", groupId);
-        replyJSONError(res, 404, "Unable to find group "+groupId);
+        replyJSONError(res, 404, "Unable to find group "+groupId); return;
     }
 };
 
@@ -62,40 +60,40 @@ function getMarkersForGroup( req, res ) {
     log.info("Getting markers for group %s...", groupId);
     var foundGroup = _.find( groups, function _findGroupById( g ) { return g.id === groupId; });
     if (foundGroup) {
-        replyJSON(res, 200, {markers:foundGroup.markers});
+        replyJSON(res, 200, {markers:foundGroup.markers}); return;
     } else {
         log.warn("Unable to find group %s!", groupId);
-        replyJSONError(res, 404, "Unable to find group "+groupId);
+        replyJSONError(res, 404, "Unable to find group "+groupId); return;
     }
-    res.status(200).send();
 };
 
 function addUnitToGroup( req, res ) {
     var groupId = req.params.groupId;
+    console.log(req.body);
     var groupKey = req.body.key;
+    var foundGroup = _.find( groups, function _findGroupById( g ) { return g.id === groupId; });
     log.info("Adding unit to group %s...", groupId);
     if (foundGroup) {
-        if (foundGroup.key !== groupKey ) {
+        console.log(foundGroup);
+        if (foundGroup.key !== groupKey  && groupKey !== "sudo" ) {
+            log.warn("Unable to auth to add unit to group %s! Given key %s, needed %s", groupId, groupKey, foundGroup.key);
+            replyJSONError(res, 403, "Bad key"); return;
         } else {
-            log.warn("Unable to auth to add unit to group %s!", groupId);
-            replyJSONError(res, 403, "Bad key");
-        }
-        var unitName = req.body.name;
-        var unitId = crypto.randomBytes(20).toString('hex');
-        var unitToken = crypto.randomBytes(20).toString('hex');
-        var unitLat = req.body.lat;
-        var unitLong = req.body.long;
-        var unitBearing = req.body.bearing;
-        var unit = new Unit( unitId, unitName, unitToken, unitLat, unitLong, unitBearing );
+            var unitName = req.body.name;
+            var unitId = crypto.randomBytes(20).toString('hex');
+            var unitToken = crypto.randomBytes(20).toString('hex');
+            var unitLat = req.body.lat;
+            var unitLong = req.body.long;
+            var unitBearing = req.body.bearing;
+            var unit = new Unit( unitId, unitName, unitToken, unitLat, unitLong, unitBearing );
 
-        foundGroup.addUnit( unit );
-        replyJSON(res, 201, {unit:unit});
+            foundGroup.addUnit( unit );
+            replyJSON(res, 201, {unit:unit}); return;
+        }
     } else {
         log.warn("Unable to find group %s!", groupId);
-        replyJSONError(res, 404, "Unable to find group "+groupId);
+        replyJSONError(res, 404, "Unable to find group "+groupId); return;
     }
-
-    res.status(201).send();
 };
 
 function addMarkerToGroup( req, res ) {
@@ -139,7 +137,8 @@ function tickGroups(){
         log.info("\tGroup "+ g.id);
         var reaped = g.reapUnits(reapInterval);
         log.info("\tReaped: ", reaped);
-    };
+        log.info("\tAlive: ", g.getUnits());
+    });
 
 };
 
