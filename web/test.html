@@ -1,0 +1,81 @@
+<html>
+    <head>
+        <title>Gorman</title>
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+		<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+		<link rel="stylesheet" type="text/css" href="css/bootstrap-theme.css">
+        
+        <script src="js/jquery.js"></script>
+        <script src="js/sockjs-0.3.min.js"></script>        
+        <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+    </head>
+    <body>
+        <div class="gorman-panel">
+            <div class="row" id="units-panel">
+                <h1> Waiting for units... </h1>
+            </div>
+        </div>
+        <div id="theMap">
+        </div>
+        <script>
+            var map = new OpenLayers.Map("theMap");
+            map.addLayer( new OpenLayers.Layer.OSM());
+            map.zoomToMaxExtent();
+
+            var sock;
+            var units = []
+
+            function updateUnitsDisplay(){
+                var $unitsPanel = $("#units-panel");
+                $unitsPanel.empty();
+                var numUnits = units.length;
+                units.forEach( function (u){                    
+                    var bsClass = "col-md-" + Math.floor(12/numUnits);
+                    var $feed = $("<canvas class='unit-feed' width=320 height=420 ></canvas>");
+                    var $name = $("<div class='unit-name'></div>").text(u.name);
+                    var $badge = $("<div class='unit-badge "+bsClass + "'></div>");
+                    $badge.append($name);
+                    $badge.append($feed);
+                    $unitsPanel.append($badge);
+                });
+            };
+
+            function handleAddUnit( unit ) {
+                units.push(unit);
+                console.log(units);
+                updateUnitsDisplay();
+            }
+
+            function handleEvent ( evt ){
+                switch(evt.type) {
+                    case "addUnit": handleAddUnit(evt.data);
+                                    break;
+                    default: break;
+                }
+            }
+
+            function setupSocket() {
+                sock = new SockJS('http://localhost:3000/commander');
+                sock.onopen = function() {
+                    console.log('open');
+                };
+                sock.onmessage = function(e) {
+                    try {
+                        var msg = JSON.parse(e.data);
+                        console.log(msg);
+                        handleEvent(msg);
+
+                    } catch (e) {
+
+                    }
+                };
+                sock.onclose = function() {
+                    console.log('close');
+                };
+            };
+
+            setupSocket();
+        </script>
+
+    </body>
+</html>
