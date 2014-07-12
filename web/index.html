@@ -75,6 +75,15 @@
             };
 
             setupSocket();
+            
+            $.ajax('/api/1.0.0/groups/test/units/',
+           	{
+           		success: function(g) {
+           			
+           			console.log(g);
+           			units=g.units;
+           		}
+           	}
         </script>
 
     </body>
