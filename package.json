@@ -18,8 +18,10 @@
   "homepage": "https://github.com/crertel/gorman-backend",
   "dependencies": {
     "bluebird": "^2.2.1",
+    "body-parser": "^1.4.3",
     "ejs": "^1.0.0",
     "express": "^4.5.1",
+    "lodash": "^2.4.1",
     "log4js": "^0.6.15",
     "sockjs": "^0.3.9"
   }

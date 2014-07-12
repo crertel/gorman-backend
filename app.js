@@ -1,11 +1,20 @@
 "use strict";
 
 var express = require("express");
+var bodyParser = require("body-parser");
+var _ = require("lodash");
 var Promise = require("bluebird");
 var log4js = require("log4js");
 var sockjs = require("sockjs")
 var log = log4js.getLogger("backend");
- 
+
+
+
+
+function createGroup( req, res ) {
+    res.status(201).send();
+};
+
 function getUnitsForGroup( req, res ) {
     var groupId = req.params.groupId;
     log.info("Getting units for group %s...", groupId);
@@ -42,8 +51,10 @@ function startWeb() {
     log.info("Starting web server on port %s...", port);
     var server = express();
 
+    server.use( bodyParser.json() );
     server.get( "/api/1.0.0/groups/:groupId/units", getUnitsForGroup );
     server.get( "/api/1.0.0/groups/:groupId/markers", getMarkersForGroup );
+    server.post( "/api/1.0.0/groups", createGroup );
     server.post( "/api/1.0.0/groups/:groupId/markers", addMarkerToGroup );
     server.post( "/api/1.0.0/groups/:groupId/units", addUnitToGroup );
     server.put( "/api/1.0.0/groups/:groupId/units/:unitId", updateUnit );
