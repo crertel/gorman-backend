@@ -106,6 +106,7 @@ function handleEvent( evt ) {
     try {
         switch( evt.type ) {
             case "updateUnit": //fallthrough
+            case "removeUnit": //fallthrough
             case "addUnit": broadcastCommanders(evt);
                             break;
             default: break;
@@ -173,6 +174,9 @@ function tickGroups(){
         var reaped = g.reapUnits(reapInterval);
         log.trace("\tReaped: ", reaped);
         log.trace("\tAlive: ", g.getUnits());
+        _.each(reaped, function (goner) {
+            handleEvent( { type: "removeUnit", data: goner } );
+        });
     });
 
 };

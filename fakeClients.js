@@ -25,11 +25,13 @@ var updateOpts = function(group,unit) {
     };
 };
 
-function updateClient( unit, token,  group ) {
+function updateClient( unit, token,  group,state ) {
+    state.lat  +=  Math.random() *0.0001;
+    state.long += Math.random() * 0.0001;
     var updateDesc = {
         bearing: Math.random() * 360.0,
-        lat: aolat + Math.random()*0.001,
-        long: aolong + Math.random()*0.001,
+        lat: state.lat,
+        long: state.long,
         token: token
     };
     
@@ -65,7 +67,7 @@ function startClient( name, group ) {
         res.on("end", function() {
             var reply = JSON.parse(response);
             console.log("Confirmed unit "+reply.id+ "\n" + response);            
-            setInterval(function(){updateClient(reply.id, reply.token,  group)},2500);
+            setInterval(function(){updateClient(reply.id, reply.token, group,clientDesc)},250);
         });
     });
     req.write( JSON.stringify(clientDesc));
