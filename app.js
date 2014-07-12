@@ -8,12 +8,13 @@ var Promise = require("bluebird");
 var log4js = require("log4js");
 var sockjs = require("sockjs")
 var log = log4js.getLogger("backend");
+log.setLevel("INFO");
 
 var Group = require(__dirname + "/models/group.js");
 var Unit = require(__dirname + "/models/unit.js");
 
 
-var groups = [];
+var groups = [ new Group( "test", "key") ];
 
 function replyJSON( res, code, object ){
     var objectJSON = JSON.stringify(object,null,4);
@@ -88,11 +89,32 @@ function addUnitToGroup( req, res ) {
             var unit = new Unit( unitId, unitName, unitToken, unitLat, unitLong, unitBearing );
 
             foundGroup.addUnit( unit );
+            handleEvent( { type: "addUnit", data: unit } );
             replyJSON(res, 201, {unit:unit}); return;
         }
     } else {
         log.warn("Unable to find group %s!", groupId);
         replyJSONError(res, 404, "Unable to find group "+groupId); return;
+    }
+};
+
+function broadcastCommanders( evt ){
+    log.info("Casting commanders %s", commanders);
+    _.each(commanders, function _broadcast(c) {
+        c.write( JSON.stringify(evt,null,4) ) ;
+    });
+}
+
+function handleEvent( evt ) {
+    try {
+        switch( evt.type ) {
+            case "updateUnit": //fallthrough
+            case "addUnit": log.info("broadcasting unit addition");
+                            broadcastCommanders(evt);
+                            break;
+            default: break;
+        }
+    } catch(e) {
     }
 };
 
@@ -134,12 +156,12 @@ function startWeb() {
 function tickGroups(){
     var reapInterval = 10 * 1000; // no reply in 10 secs? get reaped.
 
-    log.info("Ticking groups.");
+    log.trace("Ticking groups.");
     _.each(groups, function _tickGroup( g ) {
-        log.info("\tGroup "+ g.id);
+        log.trace("\tGroup "+ g.id);
         var reaped = g.reapUnits(reapInterval);
-        log.info("\tReaped: ", reaped);
-        log.info("\tAlive: ", g.getUnits());
+        log.trace("\tReaped: ", reaped);
+        log.trace("\tAlive: ", g.getUnits());
     });
 
 };
@@ -151,7 +173,6 @@ function startSockets() {
     monitorSocket.on('connection', function(conn) {
         commanders.push(conn);
         log.info("Commander joined.");
-        conn.write("Welcome!");
         conn.on('data', function(message) {
             log.info("Commander says %s", message);
         });
@@ -159,7 +180,7 @@ function startSockets() {
             var comIndex;
             comIndex = commanders.indexOf(conn);
             if (comIndex != -1) {
-                commanders.splice(opIndex,1);
+                commanders.splice(comIndex,1);
             }
             log.info("Commander left.");
         });

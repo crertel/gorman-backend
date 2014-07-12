@@ -10,8 +10,10 @@
         <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
     </head>
     <body>
-        <div class="gorman-panel" id="units-panel">
-            <h1> GORMAN TITLE! </h1>
+        <div class="gorman-panel">
+            <div class="row" id="units-panel">
+                <h1> Waiting for units... </h1>
+            </div>
         </div>
         <div id="theMap">
         </div>
@@ -21,13 +23,51 @@
             map.zoomToMaxExtent();
 
             var sock;
+            var units = []
+
+            function updateUnitsDisplay(){
+                var $unitsPanel = $("#units-panel");
+                $unitsPanel.empty();
+                var numUnits = units.length;
+                units.forEach( function (u){                    
+                    var bsClass = "col-md-" + Math.floor(12/numUnits);
+                    var $feed = $("<canvas class='unit-feed' width=320 height=420 ></canvas>");
+                    var $name = $("<div class='unit-name'></div>").text(u.name);
+                    var $badge = $("<div class='unit-badge "+bsClass + "'></div>");
+                    $badge.append($name);
+                    $badge.append($feed);
+                    $unitsPanel.append($badge);
+                });
+            };
+
+            function handleAddUnit( unit ) {
+                units.push(unit);
+                console.log(units);
+                updateUnitsDisplay();
+            }
+
+            function handleEvent ( evt ){
+                switch(evt.type) {
+                    case "addUnit": handleAddUnit(evt.data);
+                                    break;
+                    default: break;
+                }
+            }
+
             function setupSocket() {
                 sock = new SockJS('http://localhost:3000/commander');
                 sock.onopen = function() {
                     console.log('open');
                 };
                 sock.onmessage = function(e) {
-                    console.log(e.data);
+                    try {
+                        var msg = JSON.parse(e.data);
+                        console.log(msg);
+                        handleEvent(msg);
+
+                    } catch (e) {
+
+                    }
                 };
                 sock.onclose = function() {
                     console.log('close');
@@ -37,34 +77,5 @@
             setupSocket();
         </script>
 
-
-
-            <!--
-				
-				<div class="col-md-3">
-					<canvas id="canvas"></canvas>
-					<div class="person_name">
-						<p>Jim</p>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<canvas id="canvas"></canvas>
-					<div class="person_name">
-						<p>Jeff</p>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<canvas id="canvas"></canvas>
-					<div class="person_name">
-						<p>Chris</p>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<canvas id="canvas"></canvas>
-					<div class="person_name">
-						<p>Bob</p>
-                    </div>                    
-                </div>
-                -->
     </body>
 </html>
