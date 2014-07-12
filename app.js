@@ -1,6 +1,7 @@
 "use strict";
 
 var express = require("express");
+var Promise = require("bluebird");
 var log4js = require("log4js");
 var sockjs = require("sockjs")
 var log = log4js.getLogger("backend");
