@@ -9,8 +9,21 @@ var log4js = require("log4js");
 var sockjs = require("sockjs")
 var log = log4js.getLogger("backend");
 
+var Group = require("models/group.js");
+var Unit = require("models/unit.js");
+
 
 var groups = [];
+
+function replyJSON( res, code, object ){
+    var objectJSON = JSON.stringify(object,null,4);
+    res.set("Content-type", "application/json");
+    res.status(code).send(objectJSON);
+}
+
+function replyJSONError( res, code, msg ) {
+    replyJSON(res, code, {status: code, reason: msg} );
+}
 
 
 function createGroup( req, res ) {    
@@ -21,44 +34,73 @@ function createGroup( req, res ) {
         id: crypto.randomBytes(20).toString('hex'),
         key: crypto.randomBytes(20).toString('hex')
     };
-    var newGroupJSON = JSON.stringify(newGroup,null,4);
-    log.info("Created group\n%s", newGroupJSON);;
     groups.push(newGroup);
 
-    res.set("Content-type", "application/json");
-    res.status(201).send(newGroupJSON);
+    replyJSON(res, 201, newGroup);
 };
 
 function getGroups( req, res ) {    
-
     log.info("Getting groups...");
-    var groupsJSON = JSON.stringify({groups:groups},null,4);
-
-    res.set("Content-type", "application/json");
-    res.status(201).send(groupsJSON);
+    replyJSON(res, 201, {groups:groups});
 };
 
 function getUnitsForGroup( req, res ) {
     var groupId = req.params.groupId;
     log.info("Getting units for group %s...", groupId);
-    res.status(200).send();
+    var foundGroup = _.find( groups, function _findGroupById( g ) { return g.id === groupId; });
+    if (foundGroup) {
+        res.status(200).send( {units: foundGroup.units});
+        replyJSON(res, 200, {units:foundGroup.units});
+    } else {
+        log.warn("Unable to find group %s!", groupId);
+        replyJSONError(res, 404, "Unable to find group "+groupId);
+    }
 };
 
 function getMarkersForGroup( req, res ) {
     var groupId = req.params.groupId;
-    log.info("Getting units for group %s...", groupId);
+    log.info("Getting markers for group %s...", groupId);
+    var foundGroup = _.find( groups, function _findGroupById( g ) { return g.id === groupId; });
+    if (foundGroup) {
+        replyJSON(res, 200, {markers:foundGroup.markers});
+    } else {
+        log.warn("Unable to find group %s!", groupId);
+        replyJSONError(res, 404, "Unable to find group "+groupId);
+    }
     res.status(200).send();
 };
 
 function addUnitToGroup( req, res ) {
     var groupId = req.params.groupId;
-    log.info("Getting units for group %s...", groupId);
+    var groupKey = req.body.key;
+    log.info("Adding unit to group %s...", groupId);
+    if (foundGroup) {
+        if (foundGroup.key !== groupKey ) {
+        } else {
+            log.warn("Unable to auth to add unit to group %s!", groupId);
+            replyJSONError(res, 403, "Bad key");
+        }
+        var unitName = req.body.name;
+        var unitId = crypto.randomBytes(20).toString('hex');
+        var unitToken = crypto.randomBytes(20).toString('hex');
+        var unitLat = req.body.lat;
+        var unitLong = req.body.long;
+        var unitBearing = req.body.bearing;
+        var unit = new Unit( unitId, unitName, unitToken, unitLat, unitLong, unitBearing );
+
+        foundGroup.addUnit( unit );
+        replyJSON(res, 201, {unit:unit});
+    } else {
+        log.warn("Unable to find group %s!", groupId);
+        replyJSONError(res, 404, "Unable to find group "+groupId);
+    }
+
     res.status(201).send();
 };
 
 function addMarkerToGroup( req, res ) {
     var groupId = req.params.groupId;
-    log.info("Getting units for group %s...", groupId);
+    log.info("Adding marker to group %s...", groupId);
     res.status(201).send();
 };
 
@@ -88,10 +130,25 @@ function startWeb() {
     log.info("done.");
 };
 
+
+function tickGroups(){
+    var reapInterval = 10 * 1000; // no reply in 10 secs? get reaped.
+
+    log.info("Ticking groups.");
+    _.each(groups, function _tickGroup( g ) {
+        log.info("\tGroup "+ g.id);
+        var reaped = g.reapUnits(reapInterval);
+        log.info("\tReaped: ", reaped);
+    };
+
+};
+
 function init() {
     startWeb();
     process.on("SIGINT", shutdown);
     process.on("quit", shutdown);
+
+    setInterval( tickGroups, 100 );
 };
 
 function shutdown() {
