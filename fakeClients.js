@@ -1,8 +1,8 @@
 var http = require("http");
 var argv = process.argv.slice(2);
 
-var aolat = 30.0;
-var aolong = 90.0;
+var aolat = 29.7628;
+var aolong = 95.3831;
 
 var createOpts = function(group) {
     return  {
@@ -16,7 +16,6 @@ var createOpts = function(group) {
 
 var updateOpts = function(group,unit) {
     var path =  "/api/1.0.0/groups/" + group +"/units/"+unit;
-    console.log(path);
     return  {
         method: "PUT",
         headers: { "Content-type" : "application/json"},
@@ -74,6 +73,6 @@ function startClient( name, group ) {
 };
 
 startClient("chris", argv[2]);
-//startClient("jim", argv[2]);
-//startClient("paul", argv[2]);
+startClient("jim", argv[2]);
+startClient("paul", argv[2]);
 //startClient("jeff", argv[2]);

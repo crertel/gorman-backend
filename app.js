@@ -8,7 +8,7 @@ var Promise = require("bluebird");
 var log4js = require("log4js");
 var sockjs = require("sockjs")
 var log = log4js.getLogger("backend");
-log.setLevel("INFO");
+log.setLevel("warn");
 
 var Group = require(__dirname + "/models/group.js");
 var Unit = require(__dirname + "/models/unit.js");
@@ -97,7 +97,6 @@ function addUnitToGroup( req, res ) {
 };
 
 function broadcastCommanders( evt ){
-    log.info("Casting commanders %s", commanders);
     _.each(commanders, function _broadcast(c) {
         c.write( JSON.stringify(evt,null,4) ) ;
     });
@@ -107,8 +106,7 @@ function handleEvent( evt ) {
     try {
         switch( evt.type ) {
             case "updateUnit": //fallthrough
-            case "addUnit": log.info("broadcasting unit addition");
-                            broadcastCommanders(evt);
+            case "addUnit": broadcastCommanders(evt);
                             break;
             default: break;
         }
