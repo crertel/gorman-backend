@@ -1,0 +1,25 @@
+{
+  "name": "gorman-backend",
+  "version": "0.0.0",
+  "description": "Backend for the Gorman project.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/crertel/gorman-backend.git"
+  },
+  "author": "Chris Ertel, Jeff Walheim",
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/crertel/gorman-backend/issues"
+  },
+  "homepage": "https://github.com/crertel/gorman-backend",
+  "dependencies": {
+    "ejs": "^1.0.0",
+    "express": "^4.5.1",
+    "log4js": "^0.6.15",
+    "sockjs": "^0.3.9"
+  }
+}
