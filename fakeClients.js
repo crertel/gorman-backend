@@ -2,7 +2,7 @@ var http = require("http");
 var argv = process.argv.slice(2);
 
 var aolat = 29.7628;
-var aolong = 95.3831;
+var aolong = -95.3831;
 
 var createOpts = function(group) {
     return  {
@@ -28,8 +28,8 @@ var updateOpts = function(group,unit) {
 function updateClient( unit, token,  group ) {
     var updateDesc = {
         bearing: Math.random() * 360.0,
-        lat: aolat + Math.random()*0.00001,
-        long: aolong + Math.random()*0.00001,
+        lat: aolat + Math.random()*0.001,
+        long: aolong + Math.random()*0.001,
         token: token
     };
     

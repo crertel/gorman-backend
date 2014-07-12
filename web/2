@@ -56,7 +56,7 @@
             function handleAddUnit( unit ) {
                 // add marker
                 unit.mapPoint = L.latLng(unit.lat,unit.long);
-                unit.marker = L.circleMarker(unit.mapPoint).addTo(map);
+                unit.marker = L.circleMarker(unit.mapPoint);
 
                 units.push(unit);
                 updateUnitsDisplay();
