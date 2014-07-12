@@ -1,0 +1,14 @@
+#top_header {
+	border: solid black 1px;
+}
+.person_name {
+	text-align: center;
+}
+.col-md-3 {
+	border: solid black 1px;
+
+}
+#canvas {
+	border: solid black 1px;
+	width: 100%;
+}
